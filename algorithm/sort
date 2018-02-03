@@ -1,0 +1,16 @@
+1. quicksort ,partition
+2. mergesort stable sort
+3. heapsort unstable sort
+4. radixsort sort in order O(d*(n+k)) where d is the num of columns
+5. countingsort  O(n+k) where k is the max value among them
+6. bucketsort   O(n)
+
+
+
+the select algorithm
+(find the k-th max)
+
+1. partition O(n)
+2. build max heapsort in n ,and pop k times   O(n+k*log(n))
+3. build min heapsort in k ,                   O(n*log(k))
+4. countingsort                               O(n)

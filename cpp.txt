@@ -1,0 +1,61 @@
+
+
+
+# concurrent
+
+1. std::thread t(f);
+t.join();// wait thread to exit
+t.detach();// don't wait
+
+
+note that the data accessed by the thread is valid until the thread has finished with it .
+
+
+
+std::thread t(update_data_for_widget,w,data);
+// it will copy data to the other thread and change data separate with that thread
+
+
+class X
+{
+    public:
+    void do_lengthy_work();
+};
+X my_x;
+std::thread t(&X::do_lengthy_work,&my_x);
+
+std::lock_guard<std::mutex> guard(some_mutex);
+// it will unlock mutex automaticly
+
+
+Any codde that has access to that pointer or reference
+can now access (and potentially modify) the
+protected dat without locking the mutex.
+
+Don't pass pointers and references to protected data
+outside the scope of the lock, whether by returning
+them from a function, storing them in externally visible
+memory, or passing them as arguments to user-supplied
+functions.
+
+BlockingQueue:
+push()
+pop()
+peek()
+size()
+
+prefetch_full_;
+prefetch_free_;
+prefetch_;
+
+lock_guard(mutex);
+unique_guard(mutex);
+condition_.wait(lock,condition);
+condition_.notify_one();
+
+
+# reader and writer problem
+
+set count, increment when reader read sth and set -1 when writer write sth
+another solution:
+use shared_mutex to read at the same with other threads

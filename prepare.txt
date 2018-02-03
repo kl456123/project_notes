@@ -1,0 +1,141 @@
+1. SVM and LR
+2. 常见深度学习面试题
+3. 堆排序(DONE)
+4. 常见机器学习面试题
+5. 概率数学题，如何生成正态分布
+6. 外排序
+7. 多线程多进程,生产者消费者
+8. 垃圾收集
+9. leedcode
+
+
+heap sort:
+1. heap_modify(O(logn))
+2. build(O(n))
+3. sort(O(nlog(n)))
+
+external sort:
+1. loser tree to generate sorted string
+2. loser tree to do multiple merge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. CNN抓住此共性的手段主要有四个：局部连接／权值共享／池化操作／多层次结构。
+2. 后接了3个Local-Conv层，这里是用Local-Conv的原因是，人脸在不同的区域存在不同的特征
+（眼睛／鼻子／嘴的分布位置相对固定），当不存在全局的局部特征分布时，Local-Conv更适合特征的提取。
+3.
+
+* CNN为什么可以在CV/NLP/Speech等领域都可以使用？
+1. 卷积是因为输入数据的局部相关性；
+
+2. 权值共享是因为输入数据的局部特征具有平移不变性，即在不同位置具有共性的局部特征。这样，经过多层次堆叠，低层局部特征可以抽取成高层全局特征。
+
+3. 权值共享能够降低参数量，而且降低了网络的训练难度。
+
+
+note: 如果权值不共享，那就是局部连接层了。在某些应用，如人脸在不同的区域存在不同的特征
+（眼睛／鼻子／嘴的分布位置相对固定），当不存在全局的局部特征分布时，局部连接层更适合特征的提取。
+
+* 什么样的资料集不适合用深度学习?
+数据集太小，数据样本不足时，深度学习相对其它机器学习算法，没有明显优势。
+
+* 何为共线性, 跟过拟合有啥关联?
+多变量线性回归中，变量之间由于存在高度相关关系而使回归估计不准确。
+
+共线性会造成冗余，导致过拟合。
+
+解决方法：排除变量的相关性／加入权重正则。
+
+* weight initialization
+lecun_uniform
+glorot_normal
+he_normal
+batch_normal
+
+* loss function
+MSE/Cross-Entropy
+
+
+
+caffe framework
+
+
+layer:
+    SetUp:
+        LayerSetUp: check layer_param ,get param from this->layer_param_ and\
+        initialzation of weight and bias
+        Reshape: reshape top according to the bottom
+        SetLossWeights: set loss
+    Forward: calculate top_data according to the bottom_data
+    Backward: calculate bottom_diff according to the top_diff
+
+note that only param_blob is owned by layer, bottom_blob or top_blob is not
+
+train(){
+    //init solver_param and create_solver,use param.type to determine the optimization(e,g SGD)
+    Solver::Init(){
+        Solver::InitTrainNet()
+        Solver::InitTestNet()
+        }
+        Solver::solve();
+    }
+    Solver::InitTrainNet(){
+       init net_param(get it from solver file or net file)
+       net_.reset(new Net<Dtype>(net_param))
+        }
+    Solver::Test(){
+        }
+    Solver::Step(){
+        while(True){
+        loss+=net_->ForwardBackward();
+        UpdateSmoothedLoss();
+        ApplyUpdate();
+        Snapshot();
+            }
+        }
+    Solver::ApplyUpdate(){
+        ClipGradients();
+        for id in param_size():
+            Normalize();//diff divided by iter_size
+            Regularize();//L1 or L2 for weights(weight decay)
+            ComputeUpdateValue();//compute update value into diff
+        this->net_->Update();//update blob.data according to its diff
+        }
+    Net::Init(){
+        FilterNet();//filter layers according to the state(TRAIN or TEST)
+        InsertSplits();//insert split layer to handle branch
+        //For each layer set up  its input and output
+        //AppendBottom();
+        //AppendTop();
+        //layer->SetUp();
+        //set blob loss and calculate memorry used
+        //AppendParam();
+        //set layer_backward and blob_backward
+        //handle skip propagation and force
+        //record layer_names_index and blob_names_index
+        }
+    Net::ForwardBackward(){
+        Forward();
+        Backward();
+        return loss;
+        }
+
+    Net::AppendParam(){
+        //get params_ and param_id_vecs and param_layer_indices(record)
+        if(own){
+            param_.push_back(layer->blobs[0])
+            }else{
+            share with other layer
+                }
+        }
