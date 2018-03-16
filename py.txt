@@ -1,0 +1,30 @@
+
+
+np.tile
+repeat the whole array multiple times
+
+np.split
+split an array into multiple sub-array
+
+```
+# examples
+x = np.arange(9.0)
+np.split(x,3)
+
+
+x = np.arange(8.0)
+np.split(x,[3,5,6,10])
+
+```
+
+nd.clip(x,min,max)
+
+
+nd.reshape((0,0,-1,stride))
+0 means copying this dimension from input to the output shape
+
+isinstance(anchor_scales,(list,tuple))(aber)
+
+# method for dict-like
+__getitem__
+__setitem__

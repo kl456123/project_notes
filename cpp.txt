@@ -46,10 +46,7 @@ size()
 
 prefetch_full_;
 prefetch_free_;
-prefetch_;
-
-lock_guard(mutex);
-unique_guard(mutex);
+prefetch_; lock_guard(mutex); unique_guard(mutex);
 condition_.wait(lock,condition);
 condition_.notify_one();
 
@@ -59,3 +56,21 @@ condition_.notify_one();
 set count, increment when reader read sth and set -1 when writer write sth
 another solution:
 use shared_mutex to read at the same with other threads
+
+
+
+## const after member function
+this is const
+
+## virtual deconstructor
+call derived deconstructor
+
+
+## 前置声明
+class Bed;//to deal with 循环依赖(recurrent dependence)
+
+Never redefine function's inherited default parameters value.
+
+static bind of member data of class
+
+static member variable should be initialized manually
