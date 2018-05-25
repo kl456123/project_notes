@@ -49,3 +49,15 @@ excluding dont care
 
 * tp
 valid_detection!==NO_DETECTION
+
+
+## How to match gts and dets
+* first match gts with not ignored dets
+if no exist anyone, match gts with ignored dets
+
+Then get fns if no exsit one that match with gts,
+
+get fps and tps
+
+remove fps from those match with dont care case
+
