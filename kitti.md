@@ -50,7 +50,6 @@ excluding dont care
 * tp
 valid_detection!==NO_DETECTION
 
-
 # data prepare
 * velodyne point
 we should project it into camera frame,only keep points in front of camera
@@ -68,3 +67,14 @@ pc_velo[:,0] > clip_distance
 bgr_image = cv2.imread(im2path)
 rgb_image = bgr_image[...,::-1]
 ```
+
+## How to match gts and dets
+* first match gts with not ignored dets
+if no exist anyone, match gts with ignored dets
+
+Then get fns if no exsit one that match with gts,
+
+get fps and tps
+
+remove fps from those match with dont care case
+
