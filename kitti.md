@@ -49,3 +49,22 @@ excluding dont care
 
 * tp
 valid_detection!==NO_DETECTION
+
+
+# data prepare
+* velodyne point
+we should project it into camera frame,only keep points in front of camera
+```
+# in avod
+pc_camera[:,2]>0
+
+# in fpointnet
+# x axis is forward
+pc_velo[:,0] > clip_distance
+```
+
+* image
+```
+bgr_image = cv2.imread(im2path)
+rgb_image = bgr_image[...,::-1]
+```
