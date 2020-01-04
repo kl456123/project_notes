@@ -91,3 +91,8 @@ static_assert and assert
 release resource or not
 
 # unamed namespace(rename it so that it is a unique id) and static(internal linkage)
+
+# add template sometime
+```cpp
+this->template add<200>();
+```
