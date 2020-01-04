@@ -74,3 +74,20 @@ Never redefine function's inherited default parameters value.
 static bind of member data of class
 
 static member variable should be initialized manually
+
+## static_cast and dynamic_cast
+static_cast dont check type first but dynamic_cast do
+it can prevent from error when cast from parent class to child class
+but parent class should be virtual class when using dynamic_cast
+and the type_id should be pointer
+
+
+## assert
+static_assert and assert
+
+## const and constexpr
+
+## release and reset
+release resource or not
+
+# unamed namespace(rename it so that it is a unique id) and static(internal linkage)
