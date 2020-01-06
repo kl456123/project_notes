@@ -1,3 +1,42 @@
+# Tensorflow Source Code Analysis
+
+
+
+## Introduce Some classes
+
+* Some Base classes
+
+- Allocator and SubAllocator(higher-level memory managerment like pool)
+    Allocator: alloc raw data from device
+    SubAllocator: higher performance to reduce the number of times for allocating raw data
+
+    Factory: to include Both of them
+
+
+
+- RegisterFactory and register marco
+    auto register all allocator like CPUAllocator and GPUAllocator
+
+- Tensor
+    there are TensorBuffer and TensorShape member variable in it
+
+- Logger
+    interface, to log onto database
+
+
+Some impl classes
+- CPUAllocator
+    use port to allocate raw data of any types
+
+- pool_allocator
+    LRU:
+    size hidden in ptr, offset buffer ptr
+
+- port (namespace)
+    AlignedMalloc and Free function
+
+
+
 
 
 ## op registry
