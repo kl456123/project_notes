@@ -1,5 +1,34 @@
 # Arm Computation Library
 
+## schduler and context
+```cpp
+class Scheduler
+{
+public:
+/** Scheduler type */
+enum class Type
+{
+ST,    /**< Single thread. */
+CPP,   /**< C++11 threads. */
+OMP,   /**< OpenMP. */
+CUSTOM /**< Provided by the user. */
+};
+static void set(std::shared_ptr<IScheduler> scheduler);
+static IScheduler &get();
+static void set(Type t);
+static Type get_type();
+static bool is_available(Type t);
+
+private:
+static Type                        _scheduler_type;
+static std::shared_ptr<IScheduler> _custom_scheduler;
+static std::map<Type, std::unique_ptr<IScheduler>> _schedulers;
+// disable constructor
+Scheduler();
+};
+```
+
+
 
 ## memory management
 
@@ -9,30 +38,30 @@
 2. MemoryRegion
 ```cpp
 class IMemoryRegion{
-    public:
-    virtual void *buffer()=0;
-    virtual void *buffer()const=0;
-    };
+public:
+virtual void *buffer()=0;
+virtual void *buffer()const=0;
+};
 
 // CL interface
 class ICLMemoryRegion : public IMemoryRegion
 {
 public:
-    const cl::Buffer &cl_data() const;
-    virtual void *ptr() = 0;
-    virtual void *map(cl::CommandQueue &q, bool blocking) = 0;
-    virtual void unmap(cl::CommandQueue &q) = 0;
+const cl::Buffer &cl_data() const;
+virtual void *ptr() = 0;
+virtual void *map(cl::CommandQueue &q, bool blocking) = 0;
+virtual void unmap(cl::CommandQueue &q) = 0;
 
-    // Inherited methods overridden :
-    void                          *buffer() override;
-    void                          *buffer() const override;
-    std::unique_ptr<IMemoryRegion> extract_subregion(size_t offset, size_t size) override;
+// Inherited methods overridden :
+void                          *buffer() override;
+void                          *buffer() const override;
+std::unique_ptr<IMemoryRegion> extract_subregion(size_t offset, size_t size) override;
 
 protected:
-    cl::CommandQueue _queue;
-    cl::Context      _ctx;
-    void            *_mapping;
-    cl::Buffer       _mem;
+cl::CommandQueue _queue;
+cl::Context      _ctx;
+void            *_mapping;
+cl::Buffer       _mem;
 };
 ```
 
@@ -41,50 +70,50 @@ protected:
 ```cpp
 void *Allocator::allocate(size_t size, size_t alignment)
 {
-    ARM_COMPUTE_UNUSED(alignment);
-    return ::operator new(size);
+ARM_COMPUTE_UNUSED(alignment);
+return ::operator new(size);
 }
 
 void Allocator::free(void *ptr)
 {
-    ::operator delete(ptr);
+::operator delete(ptr);
 }
 
 std::unique_ptr<IMemoryRegion> Allocator::make_region(size_t size, size_t alignment)
 {
-    return arm_compute::support::cpp14::make_unique<MemoryRegion>(size, alignment);
+return arm_compute::support::cpp14::make_unique<MemoryRegion>(size, alignment);
 }
 
 CLBufferAllocator::CLBufferAllocator(CLCoreRuntimeContext *ctx)
-    : _ctx(ctx)
+: _ctx(ctx)
 {
 }
 
 void *CLBufferAllocator::allocate(size_t size, size_t alignment)
 {
-    ARM_COMPUTE_UNUSED(alignment);
-    cl_mem buf;
-    if(_ctx == nullptr)
-    {
-        buf = clCreateBuffer(CLScheduler::get().context().get(), CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size, nullptr, nullptr);
-    }
-    else
-    {
-        buf = clCreateBuffer(_ctx->context().get(), CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size, nullptr, nullptr);
-    }
-    return static_cast<void *>(buf);
+ARM_COMPUTE_UNUSED(alignment);
+cl_mem buf;
+if(_ctx == nullptr)
+{
+buf = clCreateBuffer(CLScheduler::get().context().get(), CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size, nullptr, nullptr);
+}
+else
+{
+buf = clCreateBuffer(_ctx->context().get(), CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size, nullptr, nullptr);
+}
+return static_cast<void *>(buf);
 }
 
 void CLBufferAllocator::free(void *ptr)
 {
-    ARM_COMPUTE_ERROR_ON(ptr == nullptr);
-    clReleaseMemObject(static_cast<cl_mem>(ptr));
+ARM_COMPUTE_ERROR_ON(ptr == nullptr);
+clReleaseMemObject(static_cast<cl_mem>(ptr));
 }
 
 std::unique_ptr<IMemoryRegion> CLBufferAllocator::make_region(size_t size, size_t alignment)
 {
-    ARM_COMPUTE_UNUSED(alignment);
-    return arm_compute::support::cpp14::make_unique<CLBufferMemoryRegion>(_ctx, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size);
+ARM_COMPUTE_UNUSED(alignment);
+return arm_compute::support::cpp14::make_unique<CLBufferMemoryRegion>(_ctx, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_WRITE, size);
 }
 } // namespace arm_compute
 ```
@@ -96,27 +125,27 @@ std::unique_ptr<IMemoryRegion> CLBufferAllocator::make_region(size_t size, size_
 class CLDeviceBackend final : public IDeviceBackend
 {
 public:
-    void set_kernel_tuning(bool enable_tuning);
-    void set_kernel_tuning_mode(CLTunerMode tuning_mode);
+void set_kernel_tuning(bool enable_tuning);
+void set_kernel_tuning_mode(CLTunerMode tuning_mode);
 
-    // Inherited overridden methods
-    void initialize_backend() override;
-    void setup_backend_context(GraphContext &ctx) override;
-    void release_backend_context(GraphContext &ctx) override;
-    bool                           is_backend_supported() override;
-    IAllocator                    *backend_allocator() override;
-    std::unique_ptr<ITensorHandle> create_tensor(const Tensor &tensor) override;
-    std::unique_ptr<ITensorHandle> create_subtensor(ITensorHandle *parent, TensorShape shape, Coordinates coords, bool extend_parent) override;
-    std::unique_ptr<arm_compute::IFunction> configure_node(INode &node, GraphContext &ctx) override;
-    Status validate_node(INode &node) override;
-    std::shared_ptr<arm_compute::IMemoryManager> create_memory_manager(MemoryManagerAffinity affinity) override;
-    std::shared_ptr<arm_compute::IWeightsManager> create_weights_manager() override;
+// Inherited overridden methods
+void initialize_backend() override;
+void setup_backend_context(GraphContext &ctx) override;
+void release_backend_context(GraphContext &ctx) override;
+bool                           is_backend_supported() override;
+IAllocator                    *backend_allocator() override;
+std::unique_ptr<ITensorHandle> create_tensor(const Tensor &tensor) override;
+std::unique_ptr<ITensorHandle> create_subtensor(ITensorHandle *parent, TensorShape shape, Coordinates coords, bool extend_parent) override;
+std::unique_ptr<arm_compute::IFunction> configure_node(INode &node, GraphContext &ctx) override;
+Status validate_node(INode &node) override;
+std::shared_ptr<arm_compute::IMemoryManager> create_memory_manager(MemoryManagerAffinity affinity) override;
+std::shared_ptr<arm_compute::IWeightsManager> create_weights_manager() override;
 
 private:
-    int                                   _context_count; /**< Counts how many contexts are currently using the backend */
-    CLTuner                               _tuner;         /**< CL kernel tuner */
-    std::unique_ptr<CLBufferAllocator>    _allocator;     /**< CL buffer affinity allocator */
-    std::string                           _tuner_file;    /**< Filename to load/store the tuner's values from */
+int                                   _context_count; /**< Counts how many contexts are currently using the backend */
+CLTuner                               _tuner;         /**< CL kernel tuner */
+std::unique_ptr<CLBufferAllocator>    _allocator;     /**< CL buffer affinity allocator */
+std::string                           _tuner_file;    /**< Filename to load/store the tuner's values from */
 };
 ```
 
@@ -132,4 +161,38 @@ private:
 2. edge
 3. graph
 4. workload
+
+## utils
+* how to run kernel
+    ** add argument_2d
+    ** enqueue(kernel)
+    ```cpp
+    //window
+    //dimension
+    ```
+
+    ```cpp
+    void ICLSimple2DKernel::run(const Window &window, cl::CommandQueue &queue)
+    {
+    ARM_COMPUTE_ERROR_ON_UNCONFIGURED_KERNEL(this);
+    ARM_COMPUTE_ERROR_ON_INVALID_SUBWINDOW(ICLKernel::window(), window);
+
+    Window slice = window.first_slice_window_2D();
+
+    do
+    {
+    unsigned int idx = 0;
+    add_2D_tensor_argument(idx, _input, slice);
+    add_2D_tensor_argument(idx, _output, slice);
+    enqueue(queue, *this, slice, lws_hint());
+    }
+    while(window.slide_window_slice_2D(slice));
+    }
+
+    ```
+
+* handle error
+    ```cpp
+    ```
+
 
