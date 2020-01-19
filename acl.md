@@ -149,9 +149,56 @@ std::string                           _tuner_file;    /**< Filename to load/stor
 };
 ```
 
-
 ## frontend
-1. executor_stream
+```cpp
+// stream interface
+class IStream
+{
+public:
+    virtual void add_layer(ILayer &layer) = 0;
+    virtual const Graph &graph() const = 0;
+    NodeID tail_node()
+    {
+        return _tail_node;
+    }
+    StreamHints &hints()
+    {
+        return _hints;
+    }
+    void forward_tail(NodeID nid)
+    {
+        _tail_node = (nid != NullTensorID) ? nid : _tail_node;
+    }
+
+protected:
+    StreamHints _hints     = {};              /**< Execution and algorithmic hints */
+    NodeID      _tail_node = { EmptyNodeID }; /**< NodeID pointing to the last(tail) node of the graph */
+};
+// substream just override Isubstream
+class substream{};
+
+// stream
+class stream{
+    public:
+    void finalize(Target target, const GraphConfig & config);
+    void run();
+    private:
+    GraphContext _ctx;
+    GraphManager _manager;
+    Graph _g;
+    };
+
+// layers
+class ILayer{
+    public:
+    virutal NodeID create_layer(IStream &s)=0;
+    ILayer &set_name(std::string name){
+        _name=name;
+        return *this;
+        }
+    }
+
+```
 2. layers
 3. types
 
@@ -162,16 +209,84 @@ std::string                           _tuner_file;    /**< Filename to load/stor
 3. graph
 4. workload
 
+
+## core class
+
+some classes about tensor
+```cpp
+class Tensor{
+    };
+
+class ITensorHandle
+{
+public:
+    virtual void allocate() = 0;
+    virtual void free() = 0;
+    /** Set backend tensor to be managed by a memory group
+     *
+     * @param[in] mg Memory group
+     */
+    virtual void manage(IMemoryGroup *mg) = 0;
+    /** Maps backend tensor object
+     *
+     * @param[in] blocking Flags if the mapping operations should be blocking
+     */
+    virtual void map(bool blocking) = 0;
+    /** Un-maps a backend tensor object */
+    virtual void unmap() = 0;
+    /** Releases backend tensor if is marked as unused
+     *
+     *
+     * @note This has no effect on sub-tensors
+     * @warning Parent tensors don't keep track of sub-tensors,
+     *          thus if a parent is set as unused then all sub-tensors will be invalidated,
+     *          on the other hand if a sub-tensor is marked as unused then the parent tensor won't be released
+     */
+    virtual void release_if_unused() = 0;
+    /** Backend tensor object accessor */
+    virtual arm_compute::ITensor &tensor() = 0;
+    /** Backend tensor object const accessor */
+    virtual const arm_compute::ITensor &tensor() const = 0;
+    /** Return the parent tensor handle if is a subtensor else this
+     *
+     * @return Parent tensor handle
+     */
+    virtual ITensorHandle *parent_handle() = 0;
+    /** Checks if a backing tensor is a sub-tensor object or not
+     *
+     * @return True if the backend tensor is a sub-tensor else false
+     */
+    virtual bool is_subtensor() const = 0;
+    /** Returns target type
+     *
+     * @return Target type
+     */
+    virtual Target target() const = 0;
+};
+
+class TensorInfo{
+    };
+
+class SubTensor{
+    };
+
+class TensorAllocator{
+    data_layout: "NCHW" or "NHWC"
+    };
+
+class TensorShape{
+    };
+```
+
+
 ## utils
 * how to run kernel
     ** add argument_2d
     ** enqueue(kernel)
-    ```cpp
-    //window
-    //dimension
-    ```
 
-    ```cpp
+```cpp
+//window
+//dimension
     void ICLSimple2DKernel::run(const Window &window, cl::CommandQueue &queue)
     {
     ARM_COMPUTE_ERROR_ON_UNCONFIGURED_KERNEL(this);
@@ -189,10 +304,8 @@ std::string                           _tuner_file;    /**< Filename to load/stor
     while(window.slide_window_slice_2D(slice));
     }
 
-    ```
 
 * handle error
-    ```cpp
-    ```
+```
 
 
